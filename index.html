@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>test sending html file to connected user</title>
+    <style>
+        body {
+            margin: 0 1px;
+            padding: 0;
+        }
+        .chatContainer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 500px;
+            
+        }
+        #chat-box {
+            height: 400px;
+            width: 80%;
+            box-sizing: border-box;
+            border: 1px solid black;
+        }
+
+        #chatbox-ul {
+            list-style-type: none;
+            padding-left: 5px;
+        }
+
+        .form {
+            height: 100px;
+            box-sizing: border-box;
+            border-top: 1px solid black;
+            padding-top: 10px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        .inputWrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        #inputStyles {
+            padding: 20px;
+            width: 500px;
+        }
+        #buttonStyles {
+            box-sizing: border-box;
+            padding: 17px;
+            font-size: 18px;
+            margin-left: 25px;
+        }
+
+    </style>
+</head>
+<body>
+    <div style="display: flex; border: 1px solid black; padding: 4px">
+        <div style="width: 58%; height: 60px;"></div>
+        <div style="display: flex; justify-content: center; align-items: center;">
+            <div>
+                <span>Username : </span>
+                <input id="input-username" />
+                <button id="login-button">login</button>
+            </div>    
+        </div>
+        
+        
+    </div>
+    <div class="chatContainer">
+        <div id="chat-box">
+            <ul id="chatbox-ul"></ul>
+        </div>
+    </div>
+    <div id="form">
+        <form>
+            <div class="inputWrapper">
+                <input id="inputStyles">
+                <button id="buttonStyles">Send</button>    
+            </div>
+            
+        </form>
+    </div>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        var socket = io()
+        const input = document.getElementById("inputStyles");
+        const form = document.getElementById("form");
+        const button = document.getElementById("buttonStyles");
+        const chatBox = document.getElementById("chat-box")
+        const ul = document.getElementById("chatbox-ul");
+        const inputUsername = document.getElementById("input-username");
+        const loginButton = document.getElementById("login-button");
+        
+        loginButton.addEventListener("click", function(e) {
+            e.preventDefault();
+            socket.emit("user-login", inputUsername.value);
+            inputUsername.value = "";
+        })
+        
+        button.addEventListener("click", function(e) {
+            e.preventDefault();
+            socket.emit("sendmessage", input.value)
+            input.value = "";
+        })
+        socket.on("broadcastMessage", function (msg) {
+            let li = document.createElement("li");
+            let chatMsg = document.createElement("span");
+            ul.appendChild(li);
+            li.appendChild(chatMsg)
+            chatMsg.innerText = msg;
+        } )
+
+        socket.on("user_connect", function(connectedUsername) {
+            let li = document.createElement("li");
+            let announceMsg = document.createElement("span");
+            li.appendChild(announceMsg);
+            announceMsg.innerText = connectedUsername;
+            ul.appendChild(li);
+        })
+
+        socket.on("already-registered", function(alertMsg) {alert(alertMsg)})
+        socket.on("dataAtServer", function(data) {console.log(data)})
+        
+    </script>
+</body>
+</html>
