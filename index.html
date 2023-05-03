@@ -110,10 +110,26 @@
             let userMsg = document.createElement("span");
             li.appendChild(userMsg);
             ul.appendChild(li);
-            li.innerText = `${currentUsername} : ${input.value}`
+            if(currentUsername) {
+                li.innerText = `${currentUsername} : ${input.value}`    
+            } else {
+                li.innerText = input.value
+            }
+            
             socket.emit("sendmessage", input.value);
             input.value = "";
+            // should send an event into server side, to remove text "user is typing ..."
         })
+
+        // input onChange
+
+        input.addEventListener("input", function(e) {
+            // console.log("input value was : ", input.value)
+            // console.log("if input value === blank", input.value === "")
+            // send msg to the server if input value is not black (input.value !== "")
+            // remove text msg when input equal to blank (input.value === "")
+        })
+
         socket.on("broadcastMessage", function (msg) {
             let li = document.createElement("li");
             let chatMsg = document.createElement("span");
@@ -133,7 +149,7 @@
         // test
         socket.on("registeredUsername", function(registeredUsername) {
             currentUsername = registeredUsername;
-        })
+        })    
 
         socket.on("already-registered", function(alertMsg) {alert(alertMsg)})
         socket.on("dataAtServer", function(data) {console.log(data)})
