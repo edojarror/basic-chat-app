@@ -14,7 +14,7 @@
             display: flex;
             justify-content: center;
             align-items: center;
-            height: 500px;
+            height: 480px;
             
         }
         #chat-box {
@@ -75,6 +75,12 @@
         </div>
     </div>
     <div id="form">
+        <div style="border: 1px dotted black; display: flex; justify-content: center; align-items: center; height: 30px; ">
+            <div style="width: 600px;">
+                <span id="user-is-typing" style="background-color: grey;">text about person typing is here ...</span>
+            </div>
+        </div>
+        <div style="height: 12px; border: 1px dotted brown;"></div>
         <form>
             <div class="inputWrapper">
                 <input id="inputStyles">
@@ -94,6 +100,7 @@
         const ul = document.getElementById("chatbox-ul");
         const inputUsername = document.getElementById("input-username");
         const loginButton = document.getElementById("login-button");
+        const userTypeText = document.getElementById("user-is-typing");
         let currentUsername;
 
         
@@ -128,6 +135,16 @@
             // console.log("if input value === blank", input.value === "")
             // send msg to the server if input value is not black (input.value !== "")
             // remove text msg when input equal to blank (input.value === "")
+            if(input.value === "") {
+                socket.emit("userIsTypingText", "")
+            } else {
+                if(currentUsername) {
+                    socket.emit("userIsTypingText", `${currentUsername} is typing ... `)    
+                } else {
+                    socket.emit("userIsTypingText", "unknown user is typing ... ") 
+                }
+                
+            }
         })
 
         socket.on("broadcastMessage", function (msg) {
@@ -144,6 +161,11 @@
             li.appendChild(announceMsg);
             announceMsg.innerText = connectedUsername;
             ul.appendChild(li);
+        })
+
+        // receive broadcasted msg about an user is currently typing
+        socket.on("receiveUserTypingText", function(userTypingText) {
+            userTypeText.innerText = userTypingText;
         })
 
         // test
