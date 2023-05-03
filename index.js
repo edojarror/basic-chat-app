@@ -19,11 +19,12 @@ io.on('connection', socket => {
     });
     socket.on("sendmessage", (msg) => {
         let checkAvaiablity = usersList.find(users => users.socketId === socket.id);
+        // all connected user except original sender should receive message
         if(checkAvaiablity === undefined) {
-            io.emit("broadcastMessage",msg)
+            socket.broadcast.emit("broadcastMessage",msg)
         } else {
             console.log("target usersList value : ", `${checkAvaiablity.username} : ${msg}`)
-            io.emit("broadcastMessage", `${checkAvaiablity.username} : ${msg}`)
+            socket.broadcast.emit("broadcastMessage", `${checkAvaiablity.username} : ${msg}`)
         }
     });
 
@@ -32,7 +33,9 @@ io.on('connection', socket => {
         if(checkAvaiablity === undefined) {
             console.log(checkAvaiablity)
             usersList.push({socketId: socket.id, username: user});
-            socket.broadcast.emit("user_connect", `${user} was joined to the chat room`)
+            socket.broadcast.emit("user_connect", `${user} was joined the chat room`);
+            socket.emit("registeredUsername", user);
+            console.log(usersList)
         } else {
             console.log("user list : ", usersList)
             socket.emit("already-registered", "you already registered an username")
