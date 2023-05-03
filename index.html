@@ -94,6 +94,9 @@
         const ul = document.getElementById("chatbox-ul");
         const inputUsername = document.getElementById("input-username");
         const loginButton = document.getElementById("login-button");
+        let currentUsername;
+
+        
         
         loginButton.addEventListener("click", function(e) {
             e.preventDefault();
@@ -103,7 +106,12 @@
         
         button.addEventListener("click", function(e) {
             e.preventDefault();
-            socket.emit("sendmessage", input.value)
+            let li = document.createElement("li");
+            let userMsg = document.createElement("span");
+            li.appendChild(userMsg);
+            ul.appendChild(li);
+            li.innerText = `${currentUsername} : ${input.value}`
+            socket.emit("sendmessage", input.value);
             input.value = "";
         })
         socket.on("broadcastMessage", function (msg) {
@@ -120,6 +128,11 @@
             li.appendChild(announceMsg);
             announceMsg.innerText = connectedUsername;
             ul.appendChild(li);
+        })
+
+        // test
+        socket.on("registeredUsername", function(registeredUsername) {
+            currentUsername = registeredUsername;
         })
 
         socket.on("already-registered", function(alertMsg) {alert(alertMsg)})
