@@ -13,9 +13,16 @@ app.get("/", (req,res) => {
 let usersList = [];
 io.on('connection', socket => {
     
-    io.emit(console.log("user : ", socket.id, "has connected to the server"))
+    io.emit(console.log("user : ", socket.id, "has connected to the server"));
+    socket.emit("firstLoginUserlist", usersList);
     socket.on("disconnect", () => {
-        io.emit(console.log("user : ", socket.id, "was disconnected from the server"))
+        let disconnectUser = socket.id;
+        let indexOfDisconnectedUser = usersList.map(user => {return user.socketId}).indexOf(disconnectUser)
+        // find index of the disconnected user
+        usersList.splice(indexOfDisconnectedUser, 1)
+        io.emit(console.log("user : ", socket.id, "was disconnected from the server"));
+        console.log("test apakah userlist terupdate setelah user disconnect dari server : ", usersList)
+        io.emit("newestUserlist", usersList);
     });
     socket.on("sendmessage", (msg) => {
         let checkAvaiablity = usersList.find(users => users.socketId === socket.id);
@@ -35,7 +42,8 @@ io.on('connection', socket => {
             usersList.push({socketId: socket.id, username: user});
             socket.broadcast.emit("user_connect", `${user} was joined the chat room`);
             socket.emit("registeredUsername", user);
-            // console.log(usersList)
+            io.emit("allCurrentUsers", usersList.map(user => user.username))
+            console.log(usersList)
         } else {
             // console.log("user list : ", usersList)
             socket.emit("already-registered", "you already registered an username")
@@ -49,6 +57,7 @@ io.on('connection', socket => {
         socket.broadcast.emit("receiveUserTypingText", text)
     })
     
+    console.log("inside database : ", usersList)
     
 })
 

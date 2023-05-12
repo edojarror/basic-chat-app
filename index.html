@@ -27,6 +27,7 @@
         #chatbox-ul {
             list-style-type: none;
             padding-left: 5px;
+            margin: 0 auto;
         }
 
         .form {
@@ -70,6 +71,10 @@
         
     </div>
     <div class="chatContainer">
+        <div id="userlist-box" style="border: 1px dotted green; height: 400px; width: 15%; margin-right: 14px; overflow: hidden;">
+            currently noone is connected
+            
+        </div>
         <div id="chat-box">
             <ul id="chatbox-ul"></ul>
         </div>
@@ -101,7 +106,9 @@
         const inputUsername = document.getElementById("input-username");
         const loginButton = document.getElementById("login-button");
         const userTypeText = document.getElementById("user-is-typing");
+        const userlistBox = document.getElementById("userlist-box")
         let currentUsername;
+        let currentUserList;
 
         
         
@@ -175,6 +182,50 @@
 
         socket.on("already-registered", function(alertMsg) {alert(alertMsg)})
         socket.on("dataAtServer", function(data) {console.log(data)})
+        
+        socket.on("allCurrentUsers", function(currentUsers) {
+            userlistBox.replaceChildren();
+            console.log(currentUsers);
+            currentUserList = currentUsers;
+            console.log(currentUserList)
+            let ul = document.createElement("ul");
+            ul.style.listStyleType ="none";
+            ul.style.padding = 0;
+            ul.style.margin = 0
+            
+
+            userlistBox.appendChild(ul);
+            currentUserList.map(users => {
+                console.log(users);
+                let li = document.createElement("li")
+                ul.appendChild(li);
+                li.innerText = users
+            })
+        } )
+
+        // check for newest userlist database
+        socket.on("newestUserlist", function(newestUserlist) {
+            console.log("check for newest database : ",newestUserlist);
+            let ul = document.createElement("ul");
+            currentUserList = newestUserlist;
+            userlistBox.replaceChildren();
+            userlistBox.appendChild(ul);
+            ul.style.listStyleType ="none";
+            ul.style.padding = 0;
+            ul.style.margin = 0
+            
+            currentUserList.map(user => {
+                console.log("test isi current userlist : ", user);
+                let li = document.createElement("li");
+                ul.appendChild(li);
+                li.innerText = user.username
+            })
+        })
+
+        socket.on("firstLoginUserlist", function(firstLoginUserlist) {
+            currentUserList.replaceChildren();
+            let ul = document.createElement("ul");
+        })
         
     </script>
 </body>
