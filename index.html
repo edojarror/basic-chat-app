@@ -223,8 +223,18 @@
         })
 
         socket.on("firstLoginUserlist", function(firstLoginUserlist) {
-            currentUserList.replaceChildren();
+            console.log(firstLoginUserlist)
+            userlistBox.replaceChildren();
             let ul = document.createElement("ul");
+            ul.style.listStyleType ="none";
+            ul.style.padding = 0;
+            ul.style.margin = 0
+            userlistBox.appendChild(ul);
+            firstLoginUserlist.map(user => {
+                let li = document.createElement("li");
+                ul.appendChild(li);
+                li.innerText = user.username
+            })
         })
         
     </script>

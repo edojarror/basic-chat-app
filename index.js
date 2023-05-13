@@ -16,12 +16,15 @@ io.on('connection', socket => {
     io.emit(console.log("user : ", socket.id, "has connected to the server"));
     socket.emit("firstLoginUserlist", usersList);
     socket.on("disconnect", () => {
-        let disconnectUser = socket.id;
-        let indexOfDisconnectedUser = usersList.map(user => {return user.socketId}).indexOf(disconnectUser)
-        // find index of the disconnected user
-        usersList.splice(indexOfDisconnectedUser, 1)
+        let indexOfDisconnectedUser = usersList.map(user => { if(user.socketId === socket.id)return user.socketId}).indexOf(socket.id)
+        // console.log("index userlist yg akan diremove : ",indexOfDisconnectedUser)
+        // fix user data get removed from userlist database when any connected client disconnected 
+        if(indexOfDisconnectedUser !== -1) {
+            usersList.splice(indexOfDisconnectedUser, 1)    
+        }
+        
         io.emit(console.log("user : ", socket.id, "was disconnected from the server"));
-        console.log("test apakah userlist terupdate setelah user disconnect dari server : ", usersList)
+        // console.log("test apakah userlist terupdate setelah user disconnect dari server : ", usersList)
         io.emit("newestUserlist", usersList);
     });
     socket.on("sendmessage", (msg) => {
@@ -30,7 +33,7 @@ io.on('connection', socket => {
         if(checkAvaiablity === undefined) {
             socket.broadcast.emit("broadcastMessage",msg)
         } else {
-            console.log("target usersList value : ", `${checkAvaiablity.username} : ${msg}`)
+            // console.log("target usersList value : ", `${checkAvaiablity.username} : ${msg}`)
             socket.broadcast.emit("broadcastMessage", `${checkAvaiablity.username} : ${msg}`)
         }
     });
@@ -57,7 +60,7 @@ io.on('connection', socket => {
         socket.broadcast.emit("receiveUserTypingText", text)
     })
     
-    console.log("inside database : ", usersList)
+    // console.log("inside database : ", usersList)
     
 })
 
