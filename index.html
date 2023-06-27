@@ -59,12 +59,13 @@
 </head>
 <body>
     <div style="display: flex; border: 1px solid black; padding: 4px">
-        <!-- used to join general room -->
-        <div style="width: 30%; height: 60px;">
+       
+        <div style="display:flex; justify-content: center; align-items: center; width: 30%; height: 60px;">
+            <p  id="welcomeText">Hello !!</p>
         </div>
         <div style="box-sizing: border-box; width: 45%; border: 1px solid black; display: flex; justify-content: center; align-items: center;">
             <div style="border: 1px dotted blue;">
-                <p id="roomTitle">chat room title</p>    
+                <p  id="roomTitle">chat room title</p>    
             </div>
             
         </div>
@@ -117,6 +118,7 @@
         const userlistBox = document.getElementById("userlist-box");
         const userlistText = document.getElementsByClassName("user-li")
         const roomTitle = document.getElementById("roomTitle");
+        const welcomeText = document.getElementById("welcomeText");
         let currentUsername;
         let currentUserList;
         let targetedUserId;
@@ -126,6 +128,7 @@
         loginButton.addEventListener("click", function(e) {
             e.preventDefault();
             socket.emit("user-login", inputUsername.value);
+            welcomeText.innerText = `Hello ${inputUsername.value} !`;
             inputUsername.value = "";
         })
         
