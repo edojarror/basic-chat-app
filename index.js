@@ -17,25 +17,19 @@ io.on('connection', socket => {
     io.emit(console.log("user : ", socket.id, "has connected to the server"));
     socket.emit("firstLoginUserlist", usersList);
     socket.on("disconnect", () => {
-        console.log("fast search current user index : ", usersList.map(user => user.socketId).indexOf(socket.id))
-        console.log("userlist data : ", usersList)
         let indexOfDisconnectedUser = usersList.map(user => user).indexOf(socket.id)
         usersList.splice(indexOfDisconnectedUser, 1)
         
         console.log("user : ", socket.id, "was disconnected from the server");
         io.emit("newestUserlist", usersList);
     });
+
+    // send msg to general room
     socket.on("sendmessage", (msg) => {
         // store msg
-        messageArchive.push({sender: socket.id, text: msg})
-        let checkAvaiablity = usersList.find(users => users.socketId === socket.id);
-        // all connected user except original sender should receive message
-        if(checkAvaiablity === undefined) {
-            socket.broadcast.emit("broadcastMessage",msg)
-        } else {
-            // console.log("target usersList value : ", `${checkAvaiablity.username} : ${msg}`)
-            socket.broadcast.emit("broadcastMessage", `${checkAvaiablity.username} : ${msg}`)
-        }
+        messageArchive.push(msg)
+        // remove conditional because user must login before they could send a message
+        socket.to(msg.receiver).emit("privateMessage", msg)
     });
 
     // digunakan untuk menampilkan user list saat suatu user pertama kali terkonek dengan server
@@ -45,15 +39,12 @@ io.on('connection', socket => {
     socket.on("user-login", (user) => {
         let checkAvaiablity = usersList.find(users => users.socketId === socket.id);
         if(checkAvaiablity === undefined) {
-            // console.log(checkAvaiablity)
             usersList.push({socketId: socket.id, username: user});
             socket.broadcast.emit("user_connect", `${user} was joined the chat room`);
             socket.emit("registeredUsername", user);
             // io.emit allCurrentUser dimodif sehingga mengirimkan username dan socket.id
             io.emit("allCurrentUsers", usersList)
-            // console.log(usersList)
         } else {
-            // console.log("user list : ", usersList)
             socket.emit("already-registered", "you already registered an username")
             socket.emit("dataAtServer", usersList)
         }
@@ -74,12 +65,8 @@ io.on('connection', socket => {
             socket.emit("messageHistory", messageArchive.filter(msg => msg.sender === userlist))    
         } else {
             return 
-        }
-        
+        }   
     })
-
-
-    
 })
 
 

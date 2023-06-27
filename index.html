@@ -59,7 +59,9 @@
 </head>
 <body>
     <div style="display: flex; border: 1px solid black; padding: 4px">
-        <div style="width: 30%; height: 60px;"></div>
+        <!-- used to join general room -->
+        <div style="width: 30%; height: 60px;">
+        </div>
         <div style="box-sizing: border-box; width: 45%; border: 1px solid black; display: flex; justify-content: center; align-items: center;">
             <div style="border: 1px dotted blue;">
                 <p id="roomTitle">chat room title</p>    
@@ -114,7 +116,7 @@
         const userTypeText = document.getElementById("user-is-typing");
         const userlistBox = document.getElementById("userlist-box");
         const userlistText = document.getElementsByClassName("user-li")
-        const roomTitle = document.getElementById("roomTitle")
+        const roomTitle = document.getElementById("roomTitle");
         let currentUsername;
         let currentUserList;
         let targetedUserId;
@@ -129,19 +131,27 @@
         
         button.addEventListener("click", function(e) {
             e.preventDefault();
-            let li = document.createElement("li");
-            let userMsg = document.createElement("span");
-            li.appendChild(userMsg);
-            ul.appendChild(li);
-            if(currentUsername) {
-                li.innerText = `${currentUsername} : ${input.value}`    
+            // prevent messaging when user doesnt pick where the message send (doesnt have receiver)
+            if(targetedUserId) {
+                // append general msg 
+                let li = document.createElement("li");
+                let userMsg = document.createElement("span");
+                li.appendChild(userMsg);
+                ul.appendChild(li);
+                if(currentUsername) {
+                    li.innerText = `${currentUsername} : ${input.value}`    
+                } else {
+                    li.innerText = input.value
+                }
+                socket.emit("sendmessage", {sender: socket.id, receiver: targetedUserId,text: input.value});
+                input.value = "";
+                // fixing user is typing text didnt gone when input is empty
+                socket.emit("userIsTypingText", "")
+                // should send an event into server side, to remove text "user is typing ..."    
             } else {
-                li.innerText = input.value
+                return alert("please choose where the messages is sent to")
             }
             
-            socket.emit("sendmessage", input.value);
-            input.value = "";
-            // should send an event into server side, to remove text "user is typing ..."
         })
 
         // input onChange
@@ -152,6 +162,7 @@
             // send msg to the server if input value is not black (input.value !== "")
             // remove text msg when input equal to blank (input.value === "")
             if(input.value === "") {
+                console.log("user typing is empty : ")
                 socket.emit("userIsTypingText", "")
             } else {
                 if(currentUsername) {
@@ -163,14 +174,23 @@
             }
         })
 
-
-        socket.on("broadcastMessage", function (msg) {
-            let li = document.createElement("li");
-            let chatMsg = document.createElement("span");
-            ul.appendChild(li);
-            li.appendChild(chatMsg)
-            chatMsg.innerText = msg;
-        } )
+        socket.on("privateMessage", function (msg) {
+            let ArrayOfMsgSender = currentUserList.filter(user => user.socketId === msg.sender);
+            // pengkondisian, benar = msg ditampilkan, sedangkan salah = userlist text berubah warna dan kata
+            if(targetedUserId === msg.sender) {
+                let li = document.createElement("li");
+                let chatMsg = document.createElement("span");
+                ul.appendChild(li);
+                li.appendChild(chatMsg)
+                chatMsg.innerText = `PM from ${ArrayOfMsgSender[0].username} : ${msg.text}`
+            } else {
+                for(let i = 0; i < userlistText.length; i++) {
+                    if(userlistText[i].getAttribute("key") === msg.sender) {
+                        userlistText[i].innerText = `${ArrayOfMsgSender[0].username} !!`;
+                        userlistText[i].style.color = "red"
+                }
+            }
+        }})
 
         socket.on("user_connect", function(connectedUsername) {
             let li = document.createElement("li");
@@ -195,10 +215,8 @@
         
         socket.on("allCurrentUsers", function(currentUsers) {
             userlistBox.replaceChildren();
-            console.log(currentUsers);
             // edit assignment pada currentUserList, sehingga ia melakukan filter dengan parameter username terhadap currentUsers
             currentUserList = currentUsers.filter(user => user.username);
-            console.log("check apakah ini menampilkan socketId dan username",currentUserList)
             let ul = document.createElement("ul");
             ul.style.listStyleType ="none";
             ul.style.padding = 0;
@@ -208,14 +226,14 @@
             userlistBox.appendChild(ul);
             // add key and use currentUsers socketId as value, edit innerText to display only username
             currentUserList.map(users => {
-                console.log(users);
                 let li = document.createElement("li");
                 let functionOnclick = (socketid) => {
-                    let getRoomTitle = currentUserList.filter(user => user.socketId === socketid)
+                    let getRoomTitle = currentUserList.filter(user => user.socketId === socketid);
+                    roomTitle.innerText = getRoomTitle[0].username;
                     targetedUserId = socketid;
-                    roomTitle.innerText = getRoomTitle[0].username
+                    event.target.innerText = getRoomTitle[0].username
                     socket.emit("requestMsgHistory", socketid);
-                    console.log("current targeted user id= ", targetedUserId);
+                    event.target.style.color = "black";      
                 }
                 ul.appendChild(li);
                 li.innerText = users.username
@@ -245,7 +263,7 @@
         })
 
         socket.on("firstLoginUserlist", function(firstLoginUserlist) {
-            console.log(firstLoginUserlist)
+            // console.log(firstLoginUserlist)
             userlistBox.replaceChildren();
             let ul = document.createElement("ul");
             ul.style.listStyleType ="none";
@@ -264,18 +282,21 @@
             console.log("message history from server : ", msgHistory)
             // clear all prev msg, then show any msg related to clicked socket.id at userlist
             chatBox.replaceChildren();
+            
             let ul = document.createElement("ul");
             ul.style.listStyleType ="none";
             ul.style.padding = 0;
             ul.style.margin = 0;
             chatBox.appendChild(ul);
             msgHistory.map(msg => {
+                let ArrayOfMsgSender = currentUserList.filter(user => user.socketId === msg.sender)
                 let li = document.createElement("li");
                 ul.appendChild(li);
-                li.innerText = `${msg.sender} : ${msg.text}`
+                li.innerText = `${ArrayOfMsgSender[0].username} : ${msg.text}`
             })
 
         })
+
         
     </script>
 </body>
